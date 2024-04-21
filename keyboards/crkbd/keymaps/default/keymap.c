@@ -71,6 +71,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   )
 };
 
+bool sw_lang_active = false;
+uint16_t last_input_timer = 0;
+
 void matrix_init_kb(void) {
   debug_enable = true;
   debug_matrix = true;
@@ -85,6 +88,11 @@ typedef enum {
     os_down_unused,
     os_down_used,
 } oneshot_state;
+
+oneshot_state os_shft_state = os_up_unqueued;
+oneshot_state os_ctrl_state = os_up_unqueued;
+oneshot_state os_alt_state = os_up_unqueued;
+oneshot_state os_cmd_state = os_up_unqueued;
 
 // Custom oneshot mod implementation that doesn't rely on timers. If a mod is
 // used while it is held it will be unregistered on keyup as normal, otherwise
@@ -121,7 +129,6 @@ static bool is_oneshot_key(uint16_t keycode) {
     }
 }
 
-
 void update_oneshot(
     oneshot_state *state,
     uint16_t mod,
@@ -142,6 +149,7 @@ void update_oneshot(
             case os_down_unused:
                 // If we didn't use the mod while trigger was held, queue it.
                 *state = os_up_queued;
+                last_input_timer = timer_read();
                 break;
             case os_down_used:
                 // If we did use the mod while trigger was held, unregister it.
@@ -200,13 +208,6 @@ void update_oneshot(
     }
 }
 
-bool sw_lang_active = false;
-
-oneshot_state os_shft_state = os_up_unqueued;
-oneshot_state os_ctrl_state = os_up_unqueued;
-oneshot_state os_alt_state = os_up_unqueued;
-oneshot_state os_cmd_state = os_up_unqueued;
-
 void update_swapper(
     bool *active,
     uint16_t cmdish,
@@ -229,6 +230,21 @@ void update_swapper(
     } else if (*active) {
         unregister_code(cmdish);
         *active = false;
+    }
+}
+
+void matrix_scan_user(void) {
+    if (0 < last_input_timer && ONESHOT_TIMEOUT < timer_elapsed(last_input_timer)) {
+        unregister_code(KC_LSFT);
+        unregister_code(KC_LCTL);
+        unregister_code(KC_LALT);
+        unregister_code(KC_LCMD);
+        os_shft_state = os_up_unqueued;
+        os_ctrl_state = os_up_unqueued;
+        os_alt_state = os_up_unqueued;
+        os_cmd_state = os_up_unqueued;
+        last_input_timer = 0;
+        // uprintf("KL: clear, %u\n", last_input_timer);
     }
 }
 
