@@ -177,6 +177,25 @@ void update_oneshot(
                     break;
                 }
             }
+        } else {
+            if (!is_oneshot_key(keycode)) {
+                // On non-ignored keyup, consider the oneshot used.
+                switch (*state) {
+                case os_down_unused:
+                    *state = os_down_used;
+                    break;
+                case os_up_queued:
+                    *state = os_up_unqueued;
+                    unregister_code(mod);
+                    break;
+                case os_up_used:
+                    *state = os_up_unqueued;
+                    unregister_code(mod);
+                    break;
+                default:
+                    break;
+                }
+            }
         }
     }
 }
@@ -241,7 +260,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         keycode, record
     );
 
-   return true;
+    return true;
 }
 
 // layer_state_t layer_state_set_user(layer_state_t state) {
