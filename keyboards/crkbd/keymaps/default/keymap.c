@@ -75,9 +75,9 @@ bool sw_lang_active = false;
 uint16_t last_input_timer = 0;
 
 void matrix_init_kb(void) {
-  debug_enable = true;
-  debug_matrix = true;
-  debug_mouse  = true;
+//   debug_enable = true;
+//   debug_matrix = true;
+//   debug_mouse  = true;
 }
 
 // Represents the four states a oneshot key can be in
