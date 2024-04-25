@@ -143,6 +143,7 @@ void update_oneshot(
                 register_code(mod);
             }
             *state = os_down_unused;
+            last_input_timer = 0;
         } else {
             // Trigger keyup
             switch (*state) {
